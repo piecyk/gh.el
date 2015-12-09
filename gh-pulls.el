@@ -63,12 +63,12 @@
 
 (defmethod gh-pulls-comment-req-to-create ((req gh-pulls-comment))
   (let ((in-reply-to (oref req in-reply-to))
-	(to-update `(("body" . ,(oref req body)))))
+  (to-update `(("body" . ,(oref req body)))))
     (if in-reply-to
-	(nconc to-update `(("in_reply_to" . ,in-reply-to)))
+  (nconc to-update `(("in_reply_to" . ,in-reply-to)))
       (nconc to-update `(("commit_id" . ,(oref req commit-id))
-			 ("path" . ,(oref req path))
-			 ("position" . ,(oref req position)))))
+       ("path" . ,(oref req path))
+       ("position" . ,(oref req position)))))
     to-update))
 
 (gh-defclass gh-pulls-request-stub (gh-ref-object)
@@ -89,6 +89,7 @@
   ((merged :initarg :merged)
    (mergeable :initarg :mergeable)
    (merged-by :initarg :merged-by)
+   (sha :initarg :sha)
    (comments :initarg :comments)
    (user :initarg :user :initform nil :marshal-type gh-user)
    (commits :initarg :commits)
@@ -116,6 +117,11 @@
   (gh-api-authenticated-request
    api (gh-object-list-reader (oref api req-cls)) "GET"
    (format "/repos/%s/%s/pulls" user repo)))
+
+(defmethod gh-pulls-list-commits ((api gh-pulls-api) user repo id)
+  (gh-api-authenticated-request
+   api (gh-object-list-reader (oref api req-cls)) "GET"
+   (format "/repos/%s/%s/pulls/%s/commits" user repo id)))
 
 (defmethod gh-pulls-get ((api gh-pulls-api) user repo id)
   (gh-api-authenticated-request

@@ -34,13 +34,28 @@
 
 (require 'gh-api)
 (require 'gh-auth)
+(require 'gh-comments)
 (require 'gh-common)
 
 ;;;###autoload
-(defclass gh-repos-api (gh-api-v3)
+(defclass gh-repos-api (gh-api-v3 gh-comments-api-mixin)
   ((repo-cls :allocation :class :initform gh-repos-repo)
-   (user-cls :allocation :class :initform gh-user))
+   (user-cls :allocation :class :initform gh-user)
+   (comment-cls :allocation :class :initform gh-repos-comment))
   "Repos API")
+
+(gh-defclass gh-repos-comment (gh-comment)
+  ((url :initarg :url)
+   (html-url :initarg :html-url)
+   (id :initarg :id)
+   (body :initarg :body)
+   (path :initarg :path)
+   (position :initarg :position)
+   (line :initarg :line)
+   (commit-id :initarg :commit-id)
+   (created-at :initarg :created-at)
+   (updated-at :initarg :updated-at)
+   (user :initarg :user :initform nil :marshal-type gh-user)))
 
 ;;;###autoload
 (gh-defclass gh-repos-repo-stub (gh-object)
@@ -194,7 +209,28 @@
 
 ;;; TODO gh-repos-repo-branch-commits
 ;;; TODO Collaborators sub-API
-;;; TODO Comments sub-API
+
+;;; Comments sub-API
+
+(defmethod gh-repos-comments-list ((api gh-repos-api) user repo)
+  (gh-comments-list api (format "/repos/%s/%s" user repo)))
+
+(defmethod gh-repos-comments-list-commit ((api gh-repos-api) user repo sha)
+  (gh-comments-list api (format "/repos/%s/%s/commits/%s" user repo sha)))
+
+(defmethod gh-repos-comments-get ((api gh-repos-api) user repo comment-id)
+  (gh-comments-get api (format "/repos/%s/%s" user repo) comment-id))
+
+(defmethod gh-repos-comments-req-to-create ((req gh-repos-comment))
+  `(("body" . ,(oref req body))
+    ("path". ,(oref req path))
+    ("position". ,(oref req position))))
+
+(defmethod gh-repos-comments-new ((api gh-repos-api) user repo sha comment)
+  (gh-comments-new api (format "/repos/%s/%s/commits/%s" user repo sha)
+                   (gh-repos-comments-req-to-create comment)))
+
+
 ;;; TODO Commits sub-API
 ;;; TODO Contents sub-API
 ;;; TODO Downloads sub-API

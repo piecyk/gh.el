@@ -59,7 +59,10 @@
   (gh-api-authenticated-request
    api (gh-object-reader (oref api comment-cls)) "POST"
    (format "%s/comments" (gh-ref-object-base base))
-   (gh-comment-req-to-update comment)))
+   ;; (gh-comment-req-to-update comment)))
+   ;; ;TODO: fix this
+   comment))
+
 
 (defmethod gh-comments-delete ((api gh-comments-api-mixin) base comment-id)
   (gh-api-authenticated-request
